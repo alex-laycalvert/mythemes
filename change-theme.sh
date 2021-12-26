@@ -25,4 +25,4 @@ cp $CHANGE_THEME_SCRIPT_DIR/themes/nvim/$THEME_CHOICE.lua $NVIM_THEME_DIR/$NVIM_
 cp $CHANGE_THEME_SCRIPT_DIR/themes/starship/$THEME_CHOICE.toml $STARSHIP_THEME_DIR/$STARSHIP_FILE
 
 # If nitrogen is installed
-nitrogen --set-zoom-fill $CHANGE_THEME_SCRIPT_DIR/themes/wallpapers/$THEME_CHOICE.*
+nitrogen --set-zoom-fill --save $CHANGE_THEME_SCRIPT_DIR/themes/wallpapers/$THEME_CHOICE.*
