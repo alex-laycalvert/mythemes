@@ -1,29 +1,13 @@
-# Copyright (c) 2010 Aldo Cortesi
-# Copyright (c) 2010, 2014 dequis
-# Copyright (c) 2012 Randall Ma
-# Copyright (c) 2012-2014 Tycho Andersen
-# Copyright (c) 2012 Craig Barnes
-# Copyright (c) 2013 horsik
-# Copyright (c) 2013 Tao Sauvage
+# -*- coding: utf-8 -*-
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# alex-laycalvert
+# 
+# qtile/config.py ice theme
 #
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# https://github.com/alex-laycalvert/dotfiles
 
+import os
+import subprocess
 from typing import List  # noqa: F401
 from libqtile import qtile
 from libqtile import bar, layout, widget, hook
@@ -83,7 +67,7 @@ keys = [
 
 ]
 
-groups = [Group(i) for i in "123456789"]
+groups = [Group(i) for i in "1234567890"]
 
 for i in groups:
     keys.extend([
@@ -103,9 +87,8 @@ for i in groups:
 layouts = [
     layout.Columns(
         border_focus_stack=['#d75f5f', '#8f3d3d'], 
-        #border_focus_stack=['#e49070', '#ffffff'], 
         border_width=3,
-        margin=15,
+        margin=10,
     ),
     layout.Max(),
     #layout.Stack(num_stacks=2),
@@ -125,13 +108,19 @@ layouts = [
 ]
 
 widget_defaults = dict(
+    # Uses SauceCodePro (SourceCodePro) from Nerd Fonts
     font='SauceCodePro Nerd Font',
     fontsize=18,
     padding=10,
-    background='#121223',
+
+    # same as my kitty terminal background
+    background='#202030',
 )
 extension_defaults = widget_defaults.copy()
 
+# This is really the only thing that changes between themes
+# I'll make a way to change the colors themeselves later
+# that way it isn't changing an entire file every time a theme changes
 lightGray = '282840'
 darkGray = '202035'
 text = '1D73DD'
@@ -140,6 +129,7 @@ widgetLSep = ''
 widgetRSep = ''
 widgetSepSize = 24 
 
+# Reading gmail user info so I don't post it on GitHub again
 gmailUsernameFile = open("/home/alex/.cred/gmail/username")
 gmailPasswordFile = open("/home/alex/.cred/gmail/password")
 gmailUsername = gmailUsernameFile.read().strip()
@@ -147,134 +137,151 @@ gmailPassword = gmailPasswordFile.read().strip()
 gmailUsernameFile.close()
 gmailPasswordFile.close()
 
-screens = [
-    Screen(
-        top=bar.Bar(
-            [
-                widget.GroupBox(
-                    background = darkGray,
-                    hide_unused=True,
-                    foreground = text,
-                    ),
+def init_widgets_list():
+    widgets_list = [
+            widget.TextBox(
+                background = darkGray,
+                foreground = text,
+                text = ' ',
+                mouse_callbacks = { 'Button1': lambda: qtile.cmd_spawn(browser + ' https://archlinux.org/') },
+                ),
 
-                widget.TextBox(
-                    background = lightGray,
-                    foreground = darkGray,
-                    text = widgetLSep,
-                    padding = 0,
-                    fontsize = widgetSepSize,
-                    ),
+            widget.GroupBox(
+                background = lightGray,
+                hide_unused = True,
+                foreground = text,
+                ),
 
-                widget.Prompt(
-                    foreground = text,
-                    background = lightGray,
-                    ),
-                
-                widget.TextBox(
-                    foreground = lightGray,
-                    text = widgetLSep,
-                    padding = 0,
-                    fontsize = widgetSepSize,
-                    ),
+            widget.Prompt(
+                foreground = text,
+                background = darkGray,
+                prompt = "> ",
+                ),
+            
+            widget.WindowName(
+                foreground = text,
+                ),
 
-                widget.WindowName(
-                    foreground = text,
-                    ),
+            widget.TextBox(
+                #background = darkGray,
+                foreground = lightGray,
+                text = widgetRSep,
+                padding = 0,
+                fontsize = widgetSepSize,
+                ),
 
-                widget.Systray(
-                    foreground = text,
-                    ),
+            widget.TextBox(
+                background = lightGray,
+                foreground = text,
+                text = '',
+                mouse_callbacks = { 'Button1': lambda: qtile.cmd_spawn(browser + ' https://www.gmail.com') },
+                ),
 
-                ##############################
+            widget.GmailChecker(
+                background = lightGray,
+                foreground = text,
+                username = gmailUsername,
+                password = gmailPassword,
+                email_path = 'INBOX',
+                status_only_unseen = True,
+                display_fmt = '[{1}]',
+                mouse_callbacks = { 'Button1': lambda: qtile.cmd_spawn(browser + ' https://www.gmail.com') },
+                padding = 0,
+                ),
 
-                widget.TextBox(
-                    #background = lightGray,
-                    foreground = darkGray,
-                    text = widgetRSep,
-                    padding = 0,
-                    fontsize = widgetSepSize,
-                    ),
+            widget.TextBox(
+                background = lightGray,
+                foreground = text,
+                text = '',
+                mouse_callbacks = { 'Button1': lambda: qtile.cmd_spawn(browser + ' https://www.youtube.com') },
+                ),
 
-                widget.Clock(
-                    background = darkGray,
-                    foreground = text,
-                    #format = '%a %I:%M %p %Y-%m-%d',
-                    format = '%H:%M',
-                    ),
+            # Sometimes I like seeing the price, sometimes I don't
+            # maybe I'll make it dynamic
+            # widget.CryptoTicker(
+            #     background = lightGray,
+            #     foreground = text,
+            #     format = ' {amount}',
+            #     update_interval=60,
+            #     mouse_callbacks = { 'Button1': lambda: qtile.cmd_spawn(browser + ' https://www.coinbase.com/price/bitcoin') },
+            #     ),
 
-                widget.TextBox(
-                    foreground = lightGray,
-                    background = darkGray,
-                    text = widgetRSep,
-                    padding = 0,
-                    fontsize = widgetSepSize,
-                    ),
+            widget.TextBox(
+                background = lightGray,
+                foreground = text,
+                text = '',
+                mouse_callbacks = { 'Button1': lambda: qtile.cmd_spawn(browser + ' https://www.coinbase.com/price/bitcoin') },
+                ),
 
-                widget.CryptoTicker(
-                    background = lightGray,
-                    foreground = text,
-                    format = ' {amount}',
-                    update_interval=60,
-                    ),
+            widget.TextBox(
+                background = lightGray,
+                foreground = darkGray,
+                text = widgetRSep,
+                padding = 0,
+                fontsize = widgetSepSize,
+                ),
 
-                widget.TextBox(
-                    background = lightGray,
-                    foreground = darkGray,
-                    text = widgetRSep,
-                    padding = 0,
-                    fontsize = widgetSepSize,
-                    ),
+            widget.Systray(
+                background = darkGray,
+                foreground = text,
+                padding = 4,
+                ),
 
-                widget.GmailChecker(
-                    background = darkGray,
-                    foreground = text,
-                    username = gmailUsername,
-                    password = gmailPassword,
-                    email_path = 'INBOX',
-                    display_fmt = ' {0}',
-                    mouse_callbacks = { 'Button1': lambda: qtile.cmd_spawn('brave https://gmail.com') },
-                    ),
+            widget.TextBox(
+                background = darkGray,
+                foreground = lightGray,
+                text = widgetRSep,
+                padding = 0,
+                fontsize = widgetSepSize,
+                ),
 
-                widget.TextBox(
-                    background = darkGray,
-                    foreground = lightGray,
-                    text = widgetRSep,
-                    padding = 0,
-                    fontsize = widgetSepSize,
-                    ),
+            widget.Clock(
+                background = lightGray,
+                foreground = text,
+                format = '%a %H:%M',
+                ),
 
-                widget.Volume(
-                    background = lightGray,
-                    foreground = text,
-                    emoji = True,
-                    ),
+            widget.TextBox(
+                background = lightGray,
+                foreground = darkGray,
+                text = widgetRSep,
+                padding = 0,
+                fontsize = widgetSepSize,
+                ),
 
-                widget.TextBox(
-                    background = lightGray,
-                    foreground = darkGray,
-                    text = widgetRSep,
-                    padding = 0,
-                    fontsize = widgetSepSize,
-                    ),
+            widget.Battery(
+                discharge_char = '',
+                charge_char = '',
+                full_char = '',
+                empty_char = '',
+                unknown_char = '',
+                background = darkGray,
+                foreground = text,
+                format="{char} {percent:2.0%}",
+                update_interval = 30,
+                ),
 
-                widget.Battery(
-                    discharge_char = '',
-                    charge_char = '',
-                    full_char = '',
-                    empty_char = '',
-                    unknown_char = '',
-                    background = darkGray,
-                    foreground = text,
-                    format="{char} {percent:2.0%}",
-                    update_interval = 30,
-                    ),
+        ]
+    return widgets_list
 
-            ],
-            27,
-            opacity = 0.8,
-        ),
-    ),
-]
+def init_widgets_screen():
+    widgets_screen = init_widgets_list()
+    #del widgets_screen[x:x]
+    return widgets_screen
+
+def init_screens():
+    return [
+        Screen(top = bar.Bar(
+                widgets = init_widgets_screen(), 
+                size = 27,
+                opacity = 0.8
+                )
+            )
+        ]
+
+if __name__ in { "config", "__main__" }:
+    screens = init_screens()
+    widget_list = init_widgets_list()
 
 # Drag floating layouts.
 mouse = [
@@ -307,6 +314,12 @@ reconfigure_screens = True
 # If things like steam games want to auto-minimize themselves when losing
 # focus, should we respect this or not?
 auto_minimize = True
+
+@hook.subscribe.startup_once
+def start_once():
+    home = os.path.expanduser('~')
+    subprocess.call(['sh', home + '/.config/qtile/autostart.sh'])
+
 
 # XXX: Gasp! We're lying here. In fact, nobody really uses or cares about this
 # string besides java UI toolkits; you can see several discussions on the
